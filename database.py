@@ -1,17 +1,34 @@
+import os
+from contextlib import contextmanager
+
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-USER = 'admin'
-PASSWORD = "password"
-HOST = "localhost"
-PORT = "3306"
-DATABASE = "test_database"
+load_dotenv()
+
+USER = os.getenv("DB_USER")
+PASSWORD = os.getenv("DB_PASSWORD")
+HOST = os.getenv("DB_HOST")
+PORT = os.getenv("DB_PORT")
+DATABASE = os.getenv("DB_NAME")
 
 DATABASE_URL = f"mysql+pymysql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DATABASE}"
 
 engine = create_engine(DATABASE_URL, echo=False)
-
 SessionLocal = sessionmaker(bind=engine)
 
-def get_sessions():
-    return SessionLocal()
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@contextmanager
+def get_session():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
